@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAuthenticated } from '@/lib/auth';  
-import ArtistWidget from '../../components/widgets/ArtistWidget';  
-
-
+import { isAuthenticated } from '@/lib/auth'; 
+import ArtistWidget from '../../components/Widgets/ArtistWidget';
+  
 export default function Dashboard() {
   const router = useRouter();
   const [accessToken, setAccessToken] = useState(null);
@@ -25,10 +24,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <ArtistWidget accessToken={accessToken} />
-      
-    </div>
+      <div className="widget">
+        <h2>Top Artists</h2>
+        <ArtistWidget accessToken={accessToken} />
+      </div>
   );
 }
