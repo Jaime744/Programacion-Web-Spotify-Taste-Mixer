@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth'; 
 import ArtistWidget from '../../components/Widgets/ArtistWidget';
+import DecadeWidget from '../../components/widgets/DecadeWidget';
   
 export default function Dashboard() {
   const router = useRouter();
@@ -23,10 +24,14 @@ export default function Dashboard() {
     return <div>Loading...</div>;  
   }
 
-  return (
+   return (
+    <div className="dashboard-container">
       <div className="widget">
-        <h2>Top Artists</h2>
         <ArtistWidget accessToken={accessToken} />
       </div>
+      <div className="widget">
+        <DecadeWidget accessToken={accessToken} />
+      </div>
+    </div>
   );
 }
