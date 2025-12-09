@@ -14,9 +14,9 @@ export function getSpotifyAuthUrl() {
   const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || '';
   const state = generateRandomString(16);
 
-  // Guardar el state para validación posterior (prevenir CSRF)
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('spotify_auth_state', state);
+  // Guardar el state para validación posterior 
+  if (typeof window !== 'undefined') {  
+    localStorage.setItem('spotify_auth_state', state);  
   }
 
   const scope = [
@@ -41,23 +41,30 @@ export function getSpotifyAuthUrl() {
 // Guardar tokens en localStorage
 export function saveTokens(accessToken, refreshToken, expiresIn) {
   const expirationTime = Date.now() + expiresIn * 1000;
-  localStorage.setItem('spotify_token', accessToken);
-  localStorage.setItem('spotify_refresh_token', refreshToken);
-  localStorage.setItem('spotify_token_expiration', expirationTime.toString());
+  if (typeof window !== 'undefined') {  
+    localStorage.setItem('spotify_token', accessToken);
+    localStorage.setItem('spotify_refresh_token', refreshToken);
+    localStorage.setItem('spotify_token_expiration', expirationTime.toString());
+  }
 }
 
 // Obtener token actual (con verificación de expiración)
 export function getAccessToken() {
+  
+  if (typeof window === "undefined") {
+    return null;  
+  }
+
   const token = localStorage.getItem('spotify_token');
   const expiration = localStorage.getItem('spotify_token_expiration');
   
   if (!token || !expiration) return null;
-  
-  // Si el token expiró, retornar null
+
+  // Si el token expiro, retorno null
   if (Date.now() > parseInt(expiration)) {
     return null;
   }
-  
+
   return token;
 }
 
@@ -68,7 +75,9 @@ export function isAuthenticated() {
 
 // Cerrar sesión
 export function logout() {
-  localStorage.removeItem('spotify_token');
-  localStorage.removeItem('spotify_refresh_token');
-  localStorage.removeItem('spotify_token_expiration');
+  if (typeof window !== 'undefined') {  // Solo ejecutamos esto en el cliente
+    localStorage.removeItem('spotify_token');
+    localStorage.removeItem('spotify_refresh_token');
+    localStorage.removeItem('spotify_token_expiration');
+  }
 }

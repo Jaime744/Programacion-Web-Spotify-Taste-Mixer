@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, getSpotifyAuthUrl } from '@/lib/auth';
+import ArtistWidget from '../components/widgets/ArtistWidget';
 
 export default function Home() {
   const router = useRouter();
@@ -15,14 +16,19 @@ export default function Home() {
   }, [router]);
 
   const handleLogin = () => {
+    // Redirige a la URL de autenticación de Spotify
     window.location.href = getSpotifyAuthUrl();
   };
 
   return (
-      <>
-        🎵 Spotify Taste Mixer
-      </>  
+    <>
+      <h1>🎵 Spotify Taste Mixer</h1>
+      {!isAuthenticated() ? (
+        <button onClick={handleLogin}>Login with Spotify</button>  
+      ) : (
+        <ArtistWidget />  
+      )}
+    </>
   );
 }
-
 
