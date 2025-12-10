@@ -2,13 +2,29 @@
 import React, { useState } from 'react';
 
 const genres = [
-  'acoustic', 'afrobeat', 'alt-rock', 'alternative', 'ambient', 'anime',
-  // add the rest of the genres here...
+  'acoustic', 'afrobeat', 'alt-rock', 'alternative', 'ambient', 'anime', 
+  'black-metal', 'bluegrass', 'blues', 'bossanova', 'brazil', 'breakbeat', 
+  'british', 'cantopop', 'chicago-house', 'children', 'chill', 'classical', 
+  'club', 'comedy', 'country', 'dance', 'dancehall', 'death-metal', 
+  'deep-house', 'detroit-techno', 'disco', 'disney', 'drum-and-bass', 
+  'dub', 'dubstep', 'edm', 'electro', 'electronic', 'emo', 'folk', 'forro', 
+  'french', 'funk', 'garage', 'german', 'gospel', 'goth', 'grindcore', 
+  'groove', 'grunge', 'guitar', 'happy', 'hard-rock', 'hardcore', 'hardstyle', 
+  'heavy-metal', 'hip-hop', 'house', 'idm', 'indian', 'indie', 'indie-pop', 
+  'industrial', 'iranian', 'j-dance', 'j-idol', 'j-pop', 'j-rock', 'jazz', 
+  'k-pop', 'kids', 'latin', 'latino', 'malay', 'mandopop', 'metal', 'metal-misc', 
+  'metalcore', 'minimal-techno', 'movies', 'mpb', 'new-age', 'new-release', 
+  'opera', 'pagode', 'party', 'philippines-opm', 'piano', 'pop', 'pop-film', 
+  'post-dubstep', 'power-pop', 'progressive-house', 'psych-rock', 'punk', 
+  'punk-rock', 'r-n-b', 'rainy-day', 'reggae', 'reggaeton', 'road-trip', 'rock', 
+  'rock-n-roll', 'rockabilly', 'romance', 'sad', 'salsa', 'samba', 'sertanejo', 
+  'show-tunes', 'singer-songwriter', 'ska', 'sleep', 'songwriter', 'soul', 
+  'soundtracks', 'spanish', 'study', 'summer', 'swedish', 'synth-pop', 'tango', 
+  'techno', 'trance', 'trip-hop', 'turkish', 'work-out', 'world-music'
 ];
 
-const GenreWidget = () => {
+const GenreWidget = ({ onSelectGenres }) => {
   const [selectedGenres, setSelectedGenres] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const handleGenreSelection = (genre) => {
     if (selectedGenres.includes(genre)) {
@@ -18,29 +34,19 @@ const GenreWidget = () => {
         setSelectedGenres([...selectedGenres, genre]);
       }
     }
+    onSelectGenres(selectedGenres); // Pass selected genres back to parent
   };
-
-  const filteredGenres = genres.filter(genre => 
-    genre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4 text-white">Genres</h2>
-      <input
-        type="text"
-        placeholder="Search genres..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-input w-full p-2 mb-4 border rounded-lg bg-gray-700 text-white"
-      />
+      <h2 className="text-2xl font-semibold mb-4 text-white">Select Genres</h2>
       <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         <ul className="space-y-2">
-          {filteredGenres.map((genre) => (
+          {genres.map((genre) => (
             <li
               key={genre}
               onClick={() => handleGenreSelection(genre)}
-              className={`cursor-pointer p-2 rounded-lg ${selectedGenres.includes(genre) ? 'bg-green-600 text-white' : 'bg-gray-600'}`}
+              className={`cursor-pointer p-2 rounded-lg ${selectedGenres.includes(genre) ? 'bg-green-600' : 'bg-gray-600'}`}
             >
               {genre}
             </li>

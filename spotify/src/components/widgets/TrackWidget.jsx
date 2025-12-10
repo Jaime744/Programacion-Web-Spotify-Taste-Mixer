@@ -41,7 +41,7 @@ export default function TrackWidget() {
         placeholder="Search for songs..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}  
         className="w-full p-2 mb-4 border rounded-lg bg-gray-700 text-white"
       />
       <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
