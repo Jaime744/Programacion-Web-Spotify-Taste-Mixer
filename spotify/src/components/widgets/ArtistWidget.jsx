@@ -36,6 +36,7 @@ export default function ArtistWidget({ accessToken }) {
   return (
     <div className="widget">
       <ul>
+        <h2>Tus artistas favoritos</h2>
         {artists.length > 0 ? (
           artists.map((artist) => (
             <li key={artist.id}>
