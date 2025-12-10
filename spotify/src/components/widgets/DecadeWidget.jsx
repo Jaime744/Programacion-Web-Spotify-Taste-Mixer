@@ -1,27 +1,18 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function DecadeWidget({ accessToken }) {
   const [decades, setDecades] = useState([]);
   const [tracks, setTracks] = useState([]);
-  const [selectedDecades, setSelectedDecades] = useState([]);
-
-  const handleToggleDecade = (decade) => {
-    setSelectedDecades((prevSelected) => {
-      if (prevSelected.includes(decade)) {
-        return prevSelected.filter((item) => item !== decade);
-      }
-      return [...prevSelected, decade];
-    });
-  };
+  const [selectedDecade, setSelectedDecade] = useState('');
 
   const handleSearch = async () => {
-    if (selectedDecades.length > 0) {
-      const queries = selectedDecades.map((decade) => `year:${decade}`);
+    if (selectedDecade) {
       try {
         const response = await axios.get(
-          `https://api.spotify.com/v1/search?type=track&q=${queries.join(' OR ')}`,
+          `https://api.spotify.com/v1/search?type=track&q=year:${selectedDecade}`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -36,29 +27,27 @@ export default function DecadeWidget({ accessToken }) {
   };
 
   useEffect(() => {
-    if (selectedDecades.length > 0) {
+    if (selectedDecade) {
       handleSearch();
     }
-  }, [selectedDecades]);
+  }, [selectedDecade]);
 
   return (
     <div className="widget">
-      <h2>Selecciona tus décadas/eras musicales preferidas</h2>
-      
-      <div className="decade-selector">
+      <h2>Selecciona una década</h2>
+      <select 
+        className="decade-dropdown" 
+        value={selectedDecade} 
+        onChange={(e) => setSelectedDecade(e.target.value)}
+      >
+        <option value="">Seleccionar década</option>
         {['1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s'].map((decade) => (
-          <label key={decade}>
-            <input
-              type="checkbox"
-              value={decade}
-              checked={selectedDecades.includes(decade)}
-              onChange={() => handleToggleDecade(decade)}
-            />
+          <option key={decade} value={decade}>
             {decade}
-          </label>
+          </option>
         ))}
-      </div>
-
+      </select>
+      
       <ul>
         {tracks.map((track) => (
           <li key={track.id}>
