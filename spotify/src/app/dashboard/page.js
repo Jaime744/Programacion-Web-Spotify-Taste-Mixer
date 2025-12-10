@@ -44,18 +44,16 @@ export default function Dashboard() {
       <div className="dashboard-container p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-            {/* Asegúrate de pasar la función handleArtistData como onSelectArtist */}
+           
             <ArtistWidget accessToken={accessToken} onSelectArtist={handleArtistData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
             <ArtistSearchWidget accessToken={accessToken} onSelectArtist={handleArtistData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-            {/* Asegúrate de pasar la función handleDecadeData como onSelectDecade */}
             <DecadeWidget accessToken={accessToken} onSelectDecade={handleDecadeData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-            {/* Asegúrate de pasar la función handleGenreData como onSelectGenres */}
             <GenreWidget accessToken={accessToken} onSelectGenres={handleGenreData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
@@ -67,7 +65,6 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-6">
-          {/* Componente para mostrar las canciones personalizadas */}
           <DisplaySongs accessToken={accessToken} artists={artists} genres={genres} decades={decades} />
         </div>
       </div>

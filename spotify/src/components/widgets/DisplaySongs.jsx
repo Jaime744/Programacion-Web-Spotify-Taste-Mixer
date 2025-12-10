@@ -10,8 +10,8 @@ export default function DisplaySongs({ accessToken, artists, genres, decades, mi
 
   // Función para obtener el rango de años basado en la década seleccionada
   const getDecadeRange = (decade) => {
-    const startYear = parseInt(decade.slice(0, 4));  // Año de inicio de la década (ejemplo, 1980)
-    const endYear = startYear + 9;  // Año final de la década (ejemplo, 1989 para la década de 1980)
+    const startYear = parseInt(decade.slice(0, 4));
+    const endYear = startYear + 9;  
     return { startYear, endYear };
   };
 
@@ -108,7 +108,7 @@ export default function DisplaySongs({ accessToken, artists, genres, decades, mi
           <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
             <ul className="space-y-2 text-white">
               {songs.map((song, index) => (
-                <li key={`${song.id}-${index}`}> {/* key único combinando ID y el índice */}
+                <li key={`${song.id}-${index}`}> 
                   <a
                     href={`https://open.spotify.com/track/${song.id}`}
                     target="_blank"

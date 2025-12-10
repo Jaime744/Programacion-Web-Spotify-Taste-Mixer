@@ -34,7 +34,7 @@ const GenreWidget = ({ onSelectGenres }) => {
         setSelectedGenres([...selectedGenres, genre]);
       }
     }
-    onSelectGenres(selectedGenres); // Pass selected genres back to parent
+    onSelectGenres(selectedGenres);
   };
 
   return (

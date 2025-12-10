@@ -32,7 +32,7 @@ export default function ArtistWidget({ accessToken, onSelectArtist }) {
 
   const handleSelectArtist = (artist) => {
     setSelectedArtist(artist);
-    onSelectArtist(artist); // Pass the selected artist to the parent component
+    onSelectArtist(artist);
   };
 
   if (!isClient) {

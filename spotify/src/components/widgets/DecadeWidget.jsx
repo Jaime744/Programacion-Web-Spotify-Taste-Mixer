@@ -13,8 +13,8 @@ const DecadeWidget = ({ onSelectDecade }) => {
 
   // Función para obtener el rango de años basado en la década seleccionada
   const getDecadeRange = (decade) => {
-    const startYear = parseInt(decade.slice(0, 4));  // Año de inicio de la década (ejemplo, 1980)
-    const endYear = startYear + 9;  // Año final de la década (ejemplo, 1989 para la década de 1980)
+    const startYear = parseInt(decade.slice(0, 4));
+    const endYear = startYear + 9;
     return { startYear, endYear };
   };
 
@@ -72,7 +72,6 @@ const DecadeWidget = ({ onSelectDecade }) => {
         {loading && <p className="text-white">Cargando canciones...</p>}
         {error && <p className="text-red-600">{error}</p>}
 
-        {/* Mostrar canciones de la década seleccionada */}
         {decadeSongs.length > 0 && (
           <ul className="space-y-2 text-white">
             {decadeSongs.map((song, index) => (
