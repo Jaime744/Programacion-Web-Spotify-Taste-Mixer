@@ -3,67 +3,85 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export default function DisplaySongs({ accessToken, artists, genres, decades }) {
+export default function DisplaySongs({ accessToken, artists, genres, decades, minPopularity = 50, maxPopularity = 100 }) {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Función para obtener el rango de años basado en la década seleccionada
+  const getDecadeRange = (decade) => {
+    const startYear = parseInt(decade.slice(0, 4));  // Año de inicio de la década (ejemplo, 1980)
+    const endYear = startYear + 9;  // Año final de la década (ejemplo, 1989 para la década de 1980)
+    return { startYear, endYear };
+  };
 
   // Función para buscar canciones basadas en las preferencias del usuario
   const searchSongs = async () => {
     setLoading(true);
     setError(null);
+    let trackList = [];
 
     try {
-      const trackList = [];
+      // Verificar que artists, genres y decades son arrays válidos
+      if (!Array.isArray(artists) || !Array.isArray(genres) || !Array.isArray(decades)) {
+        setError('Invalid data provided');
+        setLoading(false);
+        return;
+      }
 
-      // Buscar canciones por artistas
+      // 1. Buscar canciones por artistas
       for (const artist of artists) {
-        const res = await axios.get(
-          `https://api.spotify.com/v1/search?type=track&q=artist:${artist}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        const artistTracks = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}/top-tracks`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          params: {
+            market: 'US', // O el mercado que prefieras
           }
-        );
-        if (res.data.tracks.items.length > 0) {
-          trackList.push(res.data.tracks.items[0]); // Tomar solo una canción por artista
-        }
+        });
+        trackList.push(...artistTracks.data.tracks); // Agregar canciones del artista
       }
 
-      // Buscar canciones por géneros
+      // 2. Buscar canciones por géneros
       for (const genre of genres) {
-        const res = await axios.get(
-          `https://api.spotify.com/v1/search?type=track&q=genre:${genre}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        const genreTracks = await axios.get(`https://api.spotify.com/v1/search`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          params: {
+            q: `genre:${genre}`,
+            type: 'track',
+            limit: 10,
           }
-        );
-        if (res.data.tracks.items.length > 0) {
-          trackList.push(res.data.tracks.items[0]); // Tomar solo una canción por género
-        }
+        });
+        trackList.push(...genreTracks.data.tracks.items); // Agregar canciones del género
       }
 
-      // Buscar canciones por décadas
+      // 3. Buscar canciones por décadas
       for (const decade of decades) {
-        const res = await axios.get(
-          `https://api.spotify.com/v1/search?type=track&q=year:${decade}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        const { startYear, endYear } = getDecadeRange(decade); // Obtener el rango de años de la década
+        const decadeTracks = await axios.get(`https://api.spotify.com/v1/search`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          params: {
+            q: `year:${startYear}-${endYear}`, // Buscar canciones en el rango de años
+            type: 'track',
+            limit: 10,
           }
-        );
-        if (res.data.tracks.items.length > 0) {
-          trackList.push(res.data.tracks.items[0]); // Tomar solo una canción por década
-        }
+        });
+        trackList.push(...decadeTracks.data.tracks.items); // Agregar canciones de la década
       }
+
+      // 4. Filtrar por popularidad
+      trackList = trackList.filter(track => {
+        return track.popularity >= minPopularity && track.popularity <= maxPopularity;
+      });
 
       // Limitar a 10 canciones
       setSongs(trackList.slice(0, 10));
       setLoading(false);
+
     } catch (error) {
       console.error('Error fetching songs:', error);
       setError('Error fetching songs. Please try again later.');
@@ -72,7 +90,8 @@ export default function DisplaySongs({ accessToken, artists, genres, decades }) 
   };
 
   useEffect(() => {
-    if (artists.length > 0 || genres.length > 0 || decades.length > 0) {
+    // Solo buscar canciones si los artistas, géneros o décadas están disponibles y son válidos
+    if ((Array.isArray(artists) && artists.length > 0) || (Array.isArray(genres) && genres.length > 0) || (Array.isArray(decades) && decades.length > 0)) {
       searchSongs();
     }
   }, [artists, genres, decades]);
@@ -89,7 +108,7 @@ export default function DisplaySongs({ accessToken, artists, genres, decades }) 
           <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
             <ul className="space-y-2 text-white">
               {songs.map((song, index) => (
-                <li key={song.id}>
+                <li key={`${song.id}-${index}`}> {/* key único combinando ID y el índice */}
                   <a
                     href={`https://open.spotify.com/track/${song.id}`}
                     target="_blank"

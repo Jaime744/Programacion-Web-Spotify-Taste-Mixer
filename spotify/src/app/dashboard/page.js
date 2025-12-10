@@ -32,7 +32,7 @@ export default function Dashboard() {
   // Recoger artistas y géneros de los widgets
   const handleArtistData = (newArtists) => setArtists(newArtists);
   const handleGenreData = (newGenres) => setGenres(newGenres);
-  const handleDecadeData = (newDecades) => setDecades(newDecades);
+  const handleDecadeData = (newDecade) => setDecades([newDecade]); // Pasar solo la década seleccionada como array
 
   if (!accessToken) {
     return <div className="flex justify-center items-center min-h-screen bg-black text-white">Loading...</div>;  
@@ -44,17 +44,19 @@ export default function Dashboard() {
       <div className="dashboard-container p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-            <ArtistWidget accessToken={accessToken} onDataChange={handleArtistData} />
+            {/* Asegúrate de pasar la función handleArtistData como onSelectArtist */}
+            <ArtistWidget accessToken={accessToken} onSelectArtist={handleArtistData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-            <ArtistSearchWidget accessToken={accessToken} onDataChange={handleArtistData} />
+            <ArtistSearchWidget accessToken={accessToken} onSelectArtist={handleArtistData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
             {/* Asegúrate de pasar la función handleDecadeData como onSelectDecade */}
             <DecadeWidget accessToken={accessToken} onSelectDecade={handleDecadeData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
-            <GenreWidget accessToken={accessToken} onDataChange={handleGenreData} />
+            {/* Asegúrate de pasar la función handleGenreData como onSelectGenres */}
+            <GenreWidget accessToken={accessToken} onSelectGenres={handleGenreData} />
           </div>
           <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
             <TrackWidget accessToken={accessToken} />
@@ -65,6 +67,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-6">
+          {/* Componente para mostrar las canciones personalizadas */}
           <DisplaySongs accessToken={accessToken} artists={artists} genres={genres} decades={decades} />
         </div>
       </div>
