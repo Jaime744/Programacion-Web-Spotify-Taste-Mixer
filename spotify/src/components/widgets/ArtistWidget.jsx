@@ -1,14 +1,13 @@
-'use client'; 
+'use client';
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-// función que coge de la api los artistas mas escuchados y te lo muestra
 export default function ArtistWidget({ accessToken }) {
   const [artists, setArtists] = useState([]);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);  
+    setIsClient(true);
   }, []);
 
   useEffect(() => {
@@ -34,20 +33,27 @@ export default function ArtistWidget({ accessToken }) {
   }
 
   return (
-    <div className="widget">
-      <ul>
-        <h2>Tus artistas favoritos</h2>
-        {artists.length > 0 ? (
-          artists.map((artist) => (
-            <li key={artist.id}>
-              <img src={artist.images[0]?.url} alt={artist.name} width={50} />
-              <span>{artist.name}</span>
-            </li>
-          ))
-        ) : (
-          <p>Loading artists...</p>
-        )}
-      </ul>
+    <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
+      <h2 className="text-2xl font-semibold mb-4 text-white">Tus artistas favoritos</h2>
+      <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+        <ul className="space-y-2">
+          {artists.length > 0 ? (
+            artists.map((artist) => (
+              <li key={artist.id} className="flex items-center space-x-4 text-white">
+                <img
+                  src={artist.images[0]?.url}
+                  alt={artist.name}
+                  width={50}
+                  className="w-12 h-12 rounded-full"
+                />
+                <span>{artist.name}</span>
+              </li>
+            ))
+          ) : (
+            <p className="text-gray-400">Loading artists...</p>
+          )}
+        </ul>
+      </div>
     </div>
   );
 }

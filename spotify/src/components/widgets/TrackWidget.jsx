@@ -1,8 +1,8 @@
-'use client'; 
-import React, { useState } from 'react';
+'use client';
+import { useState } from 'react';
 import axios from 'axios';
 
-const TrackWidget = () => {
+export default function TrackWidget() {
   const [query, setQuery] = useState('');
   const [tracks, setTracks] = useState([]);
   const [selectedTracks, setSelectedTracks] = useState([]);
@@ -34,33 +34,33 @@ const TrackWidget = () => {
   };
 
   return (
-    <div className="widget">
-      <h2>Search Tracks</h2>
+    <div className="widget p-4 bg-gray-800 rounded-lg shadow-md">
+      <h2 className="text-2xl font-semibold mb-4 text-white">Search Tracks</h2>
       <input
         type="text"
         placeholder="Search for songs..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-        className="search-input"
+        className="w-full p-2 mb-4 border rounded-lg bg-gray-700 text-white"
       />
-      <ul>
-        {tracks.map((track) => (
-          <li
-            key={track.id}
-            onClick={() => handleTrackSelection(track)}
-            className={selectedTracks.includes(track.id) ? 'selected' : ''}
-          >
-            <img src={track.album.images[0].url} alt={track.name} />
-            <div>
-              <span>{track.name}</span>
-              <span>{track.artists[0].name}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+        <ul className="space-y-2">
+          {tracks.map((track) => (
+            <li
+              key={track.id}
+              onClick={() => handleTrackSelection(track)}
+              className={`cursor-pointer p-2 rounded-lg ${selectedTracks.includes(track.id) ? 'bg-green-600 text-white' : 'bg-gray-600'}`}
+            >
+              <img src={track.album.images[0].url} alt={track.name} className="w-12 h-12 rounded-full" />
+              <div>
+                <span>{track.name}</span>
+                <span>{track.artists[0].name}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
-};
-
-export default TrackWidget;
+}
