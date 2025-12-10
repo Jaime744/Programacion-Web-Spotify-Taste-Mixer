@@ -1,18 +1,27 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function DecadeWidget({ accessToken }) {
-  const [decade, setDecade] = useState('');
+  const [decades, setDecades] = useState([]);
   const [tracks, setTracks] = useState([]);
-  const [selectedTracks, setSelectedTracks] = useState([]);
+  const [selectedDecades, setSelectedDecades] = useState([]);
+
+  const handleToggleDecade = (decade) => {
+    setSelectedDecades((prevSelected) => {
+      if (prevSelected.includes(decade)) {
+        return prevSelected.filter((item) => item !== decade);
+      }
+      return [...prevSelected, decade];
+    });
+  };
 
   const handleSearch = async () => {
-    if (decade) {
+    if (selectedDecades.length > 0) {
+      const queries = selectedDecades.map((decade) => `year:${decade}`);
       try {
         const response = await axios.get(
-          `https://api.spotify.com/v1/search?type=track&q=year:${decade}`,
+          `https://api.spotify.com/v1/search?type=track&q=${queries.join(' OR ')}`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -26,37 +35,33 @@ export default function DecadeWidget({ accessToken }) {
     }
   };
 
-  const handleToggleTrack = (trackId) => {
-    setSelectedTracks((prevSelected) => {
-      if (prevSelected.includes(trackId)) {
-        return prevSelected.filter((id) => id !== trackId);
-      }
-      return [...prevSelected, trackId];
-    });
-  };
-
   useEffect(() => {
-    if (decade) {
+    if (selectedDecades.length > 0) {
       handleSearch();
     }
-  }, [decade]);
+  }, [selectedDecades]);
 
   return (
     <div className="widget">
-      <h2>Busca por decada</h2>
-      <input
-        type="text"
-        value={decade}
-        onChange={(e) => setDecade(e.target.value)}
-        placeholder=" (ej: 2010)"
-      />
+      <h2>Selecciona tus décadas/eras musicales preferidas</h2>
+      
+      <div className="decade-selector">
+        {['1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s'].map((decade) => (
+          <label key={decade}>
+            <input
+              type="checkbox"
+              value={decade}
+              checked={selectedDecades.includes(decade)}
+              onChange={() => handleToggleDecade(decade)}
+            />
+            {decade}
+          </label>
+        ))}
+      </div>
+
       <ul>
         {tracks.map((track) => (
-          <li
-            key={track.id}
-            className={selectedTracks.includes(track.id) ? 'Seleccionada' : ''}
-            onClick={() => handleToggleTrack(track.id)}
-          >
+          <li key={track.id}>
             <img src={track.album.images[2]?.url} alt={track.name} />
             <div>
               <span>{track.name}</span>

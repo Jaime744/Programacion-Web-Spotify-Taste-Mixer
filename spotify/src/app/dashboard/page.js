@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth'; 
 import ArtistWidget from '../../components/Widgets/ArtistWidget';
 import DecadeWidget from '../../components/widgets/DecadeWidget';
+import GenreWidget from '../../components/widgets/GenreWidget';
+import TrackWidget from '../../components/widgets/TrackWidget';
   
 export default function Dashboard() {
   const router = useRouter();
@@ -31,6 +33,12 @@ export default function Dashboard() {
       </div>
       <div className="widget">
         <DecadeWidget accessToken={accessToken} />
+      </div>
+      <div className="widget">
+        <GenreWidget accessToken={accessToken} />
+      </div>
+      <div className="widget">
+        <TrackWidget accessToken={accessToken} />
       </div>
     </div>
   );
