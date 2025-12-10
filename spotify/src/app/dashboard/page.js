@@ -7,7 +7,8 @@ import ArtistWidget from '../../components/Widgets/ArtistWidget';
 import DecadeWidget from '../../components/widgets/DecadeWidget';
 import GenreWidget from '../../components/widgets/GenreWidget';
 import TrackWidget from '../../components/widgets/TrackWidget';
-import ArtistSearchWidget from '..//components/widgets/ArtistSearchwidget';
+import ArtistSearchWidget from '../../components/widgets/ArtistSearchwidget';
+import MoodWidget from '../../components/widgets/MoodWidget';
   
 export default function Dashboard() {
   const router = useRouter();
@@ -44,6 +45,10 @@ export default function Dashboard() {
       <div className="widget">
         <TrackWidget accessToken={accessToken} />
       </div>
+      <div className="widget2">
+        <MoodWidget accessToken={accessToken} />
+      </div>
     </div>
+    
   );
 }
