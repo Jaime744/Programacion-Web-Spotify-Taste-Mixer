@@ -1,126 +1,192 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useEffect, useMemo, useState } from 'react';
+import PlaylistDisplay from '../PlaylistDisplay';
 
-export default function DisplaySongs({ accessToken, artists, genres, decades, minPopularity = 50, maxPopularity = 100 }) {
+function getYear(releaseDate) {
+  if (!releaseDate) return null;
+  const y = Number.parseInt(String(releaseDate).slice(0, 4), 10);
+  return Number.isFinite(y) ? y : null;
+}
+
+function decadeToRange(decade) {
+  const start = Number.parseInt(String(decade).slice(0, 4), 10);
+  if (!Number.isFinite(start)) return null;
+  return { start, end: start + 9 };
+}
+
+function uniqTracks(tracks) {
+  const seen = new Set();
+  const out = [];
+  for (const t of tracks) {
+    if (!t?.id) continue;
+    if (seen.has(t.id)) continue;
+    seen.add(t.id);
+    out.push(t);
+  }
+  return out;
+}
+
+async function spotifyGet(accessToken, url) {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.error?.message || `Spotify error ${res.status}`);
+  }
+  return data;
+}
+
+export default function DisplaySongs({
+  accessToken,
+  artists = [],
+  genres = [],
+  decades = [],
+  minPopularity = 50,
+  maxPopularity = 100,
+}) {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [err, setErr] = useState(null);
 
-  // Función para obtener el rango de años basado en la década seleccionada
-  const getDecadeRange = (decade) => {
-    const startYear = parseInt(decade.slice(0, 4));
-    const endYear = startYear + 9;  
-    return { startYear, endYear };
-  };
+  const hasFilters = useMemo(() => {
+    return (Array.isArray(artists) && artists.length) ||
+      (Array.isArray(genres) && genres.length) ||
+      (Array.isArray(decades) && decades.length);
+  }, [artists, genres, decades]);
 
-  // Función para buscar canciones basadas en las preferencias del usuario
-  const searchSongs = async () => {
+  const fetchSongs = async () => {
+    if (!accessToken) {
+      setErr('Falta accessToken.');
+      return;
+    }
+    if (!hasFilters) {
+      setSongs([]);
+      setErr(null);
+      return;
+    }
+
     setLoading(true);
-    setError(null);
-    let trackList = [];
+    setErr(null);
 
     try {
-      // Verificar que artists, genres y decades son arrays válidos
-      if (!Array.isArray(artists) || !Array.isArray(genres) || !Array.isArray(decades)) {
-        setError('Invalid data provided');
-        setLoading(false);
-        return;
+      let trackList = [];
+
+      //Top-tracks por artistas
+      if (Array.isArray(artists)) {
+        for (const a of artists) {
+          if (!a?.id) continue;
+          const url = new URL(`https://api.spotify.com/v1/artists/${a.id}/top-tracks`);
+          url.searchParams.set('market', 'ES');
+          const data = await spotifyGet(accessToken, url.toString());
+          trackList.push(...(Array.isArray(data?.tracks) ? data.tracks : []));
+        }
       }
 
-      // 1. Buscar canciones por artistas
-      for (const artist of artists) {
-        const artistTracks = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}/top-tracks`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          params: {
-            market: 'US', // O el mercado que prefieras
-          }
+      //Tracks por género
+      if (Array.isArray(genres)) {
+        for (const g of genres) {
+          if (!g) continue;
+          const url = new URL('https://api.spotify.com/v1/search');
+          url.searchParams.set('type', 'track');
+          url.searchParams.set('limit', '10');
+          url.searchParams.set('q', `genre:${g}`);
+          const data = await spotifyGet(accessToken, url.toString());
+          trackList.push(...(Array.isArray(data?.tracks?.items) ? data.tracks.items : []));
+        }
+      }
+
+      // Tracks por década
+      if (Array.isArray(decades)) {
+        for (const d of decades) {
+          const r = decadeToRange(d);
+          if (!r) continue;
+          const url = new URL('https://api.spotify.com/v1/search');
+          url.searchParams.set('type', 'track');
+          url.searchParams.set('limit', '10');
+          url.searchParams.set('q', `year:${r.start}-${r.end}`);
+          const data = await spotifyGet(accessToken, url.toString());
+          trackList.push(...(Array.isArray(data?.tracks?.items) ? data.tracks.items : []));
+        }
+      }
+      trackList = uniqTracks(trackList);
+
+      // Filtro por década 
+      const decadeRanges = (Array.isArray(decades) ? decades : [])
+        .map(decadeToRange)
+        .filter(Boolean);
+
+      if (decadeRanges.length) {
+        trackList = trackList.filter((t) => {
+          const y = getYear(t?.album?.release_date);
+          if (!y) return false;
+          return decadeRanges.some((r) => y >= r.start && y <= r.end);
         });
-        trackList.push(...artistTracks.data.tracks); // Agregar canciones del artista
       }
 
-      // 2. Buscar canciones por géneros
-      for (const genre of genres) {
-        const genreTracks = await axios.get(`https://api.spotify.com/v1/search`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          params: {
-            q: `genre:${genre}`,
-            type: 'track',
-            limit: 10,
-          }
-        });
-        trackList.push(...genreTracks.data.tracks.items); // Agregar canciones del género
-      }
-
-      // 3. Buscar canciones por décadas
-      for (const decade of decades) {
-        const { startYear, endYear } = getDecadeRange(decade); // Obtener el rango de años de la década
-        const decadeTracks = await axios.get(`https://api.spotify.com/v1/search`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          params: {
-            q: `year:${startYear}-${endYear}`, // Buscar canciones en el rango de años
-            type: 'track',
-            limit: 10,
-          }
-        });
-        trackList.push(...decadeTracks.data.tracks.items); // Agregar canciones de la década
-      }
-
-      // 4. Filtrar por popularidad
-      trackList = trackList.filter(track => {
-        return track.popularity >= minPopularity && track.popularity <= maxPopularity;
+      // Popularidad
+      const minP = Number(minPopularity);
+      const maxP = Number(maxPopularity);
+      trackList = trackList.filter((t) => {
+        const p = typeof t?.popularity === 'number' ? t.popularity : null;
+        if (p === null) return true;
+        return p >= minP && p <= maxP;
       });
 
-      // Limitar a 10 canciones
-      setSongs(trackList.slice(0, 10));
-      setLoading(false);
-
-    } catch (error) {
-      console.error('Error fetching songs:', error);
-      setError('Error fetching songs. Please try again later.');
+      // Ordenar por popularidad
+      trackList.sort((a, b) => (b?.popularity || 0) - (a?.popularity || 0));
+      setSongs(trackList.slice(0, 30));
+    } catch (e) {
+      setErr(e?.message || 'Error obteniendo canciones');
+      setSongs([]);
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Solo buscar canciones si los artistas, géneros o décadas están disponibles y son válidos
-    if ((Array.isArray(artists) && artists.length > 0) || (Array.isArray(genres) && genres.length > 0) || (Array.isArray(decades) && decades.length > 0)) {
-      searchSongs();
-    }
-  }, [artists, genres, decades]);
+    // auto-refresh cuando cambian filtros (si hay algo seleccionado)
+    fetchSongs();
+  }, [accessToken, artists, genres, decades, minPopularity, maxPopularity]);
 
   return (
-    <div className="p-4 bg-gray-800 rounded-lg shadow-md max-w-md mx-auto">
-      {loading ? (
-        <p className="text-white">Loading songs...</p>
-      ) : error ? (
-        <p className="text-red-600">{error}</p>
-      ) : (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold mb-4 text-white">Personalized Songs</h2>
-          <div className="h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-            <ul className="space-y-2 text-white">
-              {songs.map((song, index) => (
-                <li key={`${song.id}-${index}`}> 
-                  <a
-                    href={`https://open.spotify.com/track/${song.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    {index + 1}. {song.name} by {song.artists.map((artist) => artist.name).join(', ')}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <h2 className="text-lg font-semibold text-neutral-100">Personalized Songs</h2>
+          <p className="mt-1 text-xs text-neutral-400">
+            Artistas: {Array.isArray(artists) ? artists.length : 0} · Géneros:{' '}
+            {Array.isArray(genres) ? genres.length : 0} · Décadas: {Array.isArray(decades) ? decades.length : 0}
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={fetchSongs}
+            className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-neutral-950 hover:bg-emerald-400"
+          >
+            Generar
+          </button>
+          <button
+            onClick={() => setSongs([])}
+            className="rounded-xl border border-neutral-800 bg-neutral-950/40 px-4 py-2 text-sm font-semibold text-neutral-200 hover:bg-neutral-900/50"
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      {err ? <p className="mt-3 text-sm text-red-400">{err}</p> : null}
+
+      {loading ? (
+        <div className="mt-4 flex items-center gap-2 text-sm text-neutral-300">
+          <div className="h-4 w-4 animate-spin rounded-full border border-neutral-700 border-t-emerald-500" />
+          Cargando…
+        </div>
+      ) : songs.length === 0 ? (
+        <p className="mt-4 text-sm text-neutral-400">Selecciona filtros arriba para generar canciones.</p>
+      ) : (
+        <div className="mt-4">
+          <PlaylistDisplay title="Resultados" tracks={songs} />
         </div>
       )}
     </div>
