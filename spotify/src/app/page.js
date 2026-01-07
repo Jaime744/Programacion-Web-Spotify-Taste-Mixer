@@ -40,10 +40,6 @@ export default function Home() {
           >
             Iniciar sesión con Spotify
           </button>
-          <p className="text-center text-xs text-neutral-400">
-            Configura <span className="font-mono">NEXT_PUBLIC_SPOTIFY_CLIENT_ID</span> y{' '}
-            <span className="font-mono">NEXT_PUBLIC_REDIRECT_URI</span>.
-          </p>
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
