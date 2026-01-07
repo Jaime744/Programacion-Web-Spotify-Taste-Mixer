@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { saveTokens } from '@/lib/auth';
+import { saveTokens } from '../../lib/auth';
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -11,7 +11,6 @@ export default function CallbackPage() {
   const hasProcessed = useRef(false);
 
   useEffect(() => {
-    // Prevenir ejecución duplicada
     if (hasProcessed.current) return;
 
     const code = searchParams.get('code');
@@ -28,59 +27,48 @@ export default function CallbackPage() {
       return;
     }
 
-    // Validar state para prevenir CSRF
     const savedState = localStorage.getItem('spotify_auth_state');
     if (!state || state !== savedState) {
       setError('Error de validación de seguridad (CSRF). Intenta iniciar sesión de nuevo.');
-      localStorageStorage.removeItem('spotify_auth_state');
+      localStorage.removeItem('spotify_auth_state');
       return;
     }
 
-    // Limpiar state después de validar
     localStorage.removeItem('spotify_auth_state');
-
-    // Marcar como procesado
     hasProcessed.current = true;
 
-    // Intercambiar código por token
-    const exchangeCodeForToken = async (code) => {
+    (async () => {
       try {
         const response = await fetch('/api/spotify-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ code }),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
           throw new Error(data.error || 'Error al obtener token');
         }
 
-        // Guardar tokens
         saveTokens(data.access_token, data.refresh_token, data.expires_in);
-
-        // Redirigir al dashboard
-        router.push('/dashboard');
-
-      } catch (error) {
-        console.error('Error:', error);
-        setError(error.message);
+        router.replace('/dashboard');
+      } catch (e) {
+        console.error('Error:', e);
+        setError(e?.message || 'Error desconocido');
       }
-    };
-
-    exchangeCodeForToken(code);
+    })();
   }, [searchParams, router]);
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-500 mb-4">Error</h1>
-          <p className="text-white mb-6">{error}</p>
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 shadow">
+          <h1 className="text-xl font-semibold text-red-400">Error</h1>
+          <p className="mt-2 text-sm text-neutral-200">{error}</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
           >
             Volver al inicio
           </button>
@@ -90,10 +78,10 @@ export default function CallbackPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-        <p className="text-white text-xl">Autenticando...</p>
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 shadow">
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-neutral-700 border-t-emerald-500" />
+        <p className="mt-4 text-center text-sm text-neutral-200">Autenticando…</p>
       </div>
     </div>
   );
