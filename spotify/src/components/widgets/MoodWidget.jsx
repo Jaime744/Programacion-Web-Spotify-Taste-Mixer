@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
+const SPOTIFY_API = 'https://api.spotify.com/v1';
+
 const PRESETS = {
   happy: { seed: 'pop', energy: 0.75, valence: 0.75, danceability: 0.7, acousticness: 0.2 },
   chill: { seed: 'chill', energy: 0.35, valence: 0.55, danceability: 0.45, acousticness: 0.55 },
@@ -48,9 +50,11 @@ export default function MoodWidget({ accessToken }) {
     setErr(null);
 
     try {
-      const url = new URL('https://api.spotify.com/v1/recommendations');
+      const url = new URL(`${SPOTIFY_API}/recommendations`);
       url.searchParams.set('limit', '10');
+      url.searchParams.set('market', 'ES'); 
       url.searchParams.set('seed_genres', seedGenre);
+
       url.searchParams.set('target_energy', String(clamp01(energy)));
       url.searchParams.set('target_valence', String(clamp01(valence)));
       url.searchParams.set('target_danceability', String(clamp01(danceability)));
@@ -61,10 +65,15 @@ export default function MoodWidget({ accessToken }) {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message || 'Error en recomendaciones');
+
+      if (!res.ok) {
+        //ver el error real de Spotify
+        throw new Error(`${res.status}: ${data?.error?.message || 'Error en recomendaciones'}`);
+      }
 
       setTracks(Array.isArray(data?.tracks) ? data.tracks : []);
     } catch (e) {
+      setTracks([]);
       setErr(e?.message || 'Error');
     } finally {
       setLoading(false);
