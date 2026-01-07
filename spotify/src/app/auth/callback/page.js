@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { saveTokens } from '../../lib/auth';
+import { saveTokens } from '../../../lib/auth';
 
 export default function CallbackPage() {
   const router = useRouter();

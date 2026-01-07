@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-const DECADES = ['1950s','1960s','1970s','1980s','1990s','2000s','2010s','2020s'];
+const DECADES = ['1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s'];
 
 function decadeRange(decade) {
-  const start = Number.parseInt(decade.slice(0, 4), 10);
+  const start = Number.parseInt(String(decade).slice(0, 4), 10);
+  if (!Number.isFinite(start)) return null;
   return { startYear: start, endYear: start + 9 };
 }
 
@@ -17,17 +18,20 @@ export default function DecadeWidget({ accessToken, onSelectDecade }) {
 
   const range = useMemo(() => (selected ? decadeRange(selected) : null), [selected]);
 
+  // ✅ IMPORTANTE: aquí llamamos al callback SOLO cuando el usuario hace click
+  const pick = (d) => {
+    const next = selected === d ? '' : d;
+    setSelected(next);
+    onSelectDecade?.(next || null);
+  };
+
+  // ✅ useEffect SOLO para preview (no toca el parent)
   useEffect(() => {
-    if (!selected) {
+    if (!selected || !accessToken) {
       setPreview([]);
       setErr(null);
       return;
     }
-
-    onSelectDecade?.(selected);
-
-    // Preview opcional: si no hay token, no hacemos preview.
-    if (!accessToken) return;
 
     let cancelled = false;
 
@@ -35,15 +39,18 @@ export default function DecadeWidget({ accessToken, onSelectDecade }) {
       setLoading(true);
       setErr(null);
       try {
-        const { startYear, endYear } = decadeRange(selected);
+        const r = decadeRange(selected);
+        if (!r) throw new Error('Década inválida');
+
         const url = new URL('https://api.spotify.com/v1/search');
         url.searchParams.set('type', 'track');
         url.searchParams.set('limit', '8');
-        url.searchParams.set('q', `year:${startYear}-${endYear}`);
+        url.searchParams.set('q', `year:${r.startYear}-${r.endYear}`);
 
         const res = await fetch(url.toString(), {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
+
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data?.error?.message || 'Error cargando preview');
 
@@ -59,7 +66,7 @@ export default function DecadeWidget({ accessToken, onSelectDecade }) {
     return () => {
       cancelled = true;
     };
-  }, [selected, accessToken, onSelectDecade]);
+  }, [selected, accessToken]);
 
   return (
     <div>
@@ -73,7 +80,7 @@ export default function DecadeWidget({ accessToken, onSelectDecade }) {
             <button
               key={d}
               type="button"
-              onClick={() => setSelected(active ? '' : d)}
+              onClick={() => pick(d)}
               className={`rounded-full border px-3 py-1.5 text-sm transition ${
                 active
                   ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'

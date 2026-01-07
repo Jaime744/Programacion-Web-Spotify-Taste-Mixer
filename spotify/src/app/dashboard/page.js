@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+
 import Header from '../../components/Header';
 import { getAccessToken, isAuthenticated } from '../../lib/auth';
 
@@ -16,11 +17,13 @@ import DisplaySongs from '../../components/widgets/DisplaySongs';
 
 export default function Dashboard() {
   const router = useRouter();
+
   const [accessToken, setAccessToken] = useState(null);
 
   const [artists, setArtists] = useState([]);
   const [genres, setGenres] = useState([]);
   const [decades, setDecades] = useState([]);
+  const [tracks, setTracks] = useState([]);
   const [popularity, setPopularity] = useState({ min: 50, max: 100 });
 
   useEffect(() => {
@@ -30,6 +33,29 @@ export default function Dashboard() {
     }
     setAccessToken(getAccessToken());
   }, [router]);
+
+  // ✅ callbacks estables para evitar bucles de render/useEffect
+  const handleSelectArtists = useCallback((list) => {
+    setArtists(Array.isArray(list) ? list.slice(0, 5) : []);
+  }, []);
+
+  const handleSelectGenres = useCallback((list) => {
+    setGenres(Array.isArray(list) ? list.slice(0, 5) : []);
+  }, []);
+
+  const handleSelectDecade = useCallback((d) => {
+    setDecades(d ? [d] : []);
+  }, []);
+
+  const handleSelectTracks = useCallback((ids) => {
+    setTracks(Array.isArray(ids) ? ids.slice(0, 5) : []);
+  }, []);
+
+  const handlePopularity = useCallback((v) => {
+    const min = typeof v?.min === 'number' ? v.min : 0;
+    const max = typeof v?.max === 'number' ? v.max : 100;
+    setPopularity({ min: Math.max(0, Math.min(100, min)), max: Math.max(0, Math.min(100, max)) });
+  }, []);
 
   if (!accessToken) {
     return (
@@ -50,33 +76,41 @@ export default function Dashboard() {
         <div>
           <h2 className="text-2xl font-bold">Dashboard</h2>
           <p className="mt-1 text-sm text-neutral-400">
-            Selecciona tus preferencias y mira una lista de canciones.
+            Selecciona artistas / géneros / décadas y genera una lista de canciones.
           </p>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <ArtistWidget accessToken={accessToken} onSelectArtists={setArtists} />
+            <ArtistWidget accessToken={accessToken} onSelectArtists={handleSelectArtists} />
           </div>
 
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <ArtistSearchWidget accessToken={accessToken} onSelectArtists={setArtists} />
+            <ArtistSearchWidget
+              accessToken={accessToken}
+              selectedArtists={artists}
+              onSelectArtists={handleSelectArtists}
+            />
           </div>
 
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <DecadeWidget accessToken={accessToken} onSelectDecade={(d) => setDecades(d ? [d] : [])} />
+            <DecadeWidget accessToken={accessToken} onSelectDecade={handleSelectDecade} />
           </div>
 
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <GenreWidget onSelectGenres={setGenres} />
+            <GenreWidget selectedGenres={genres} onSelectGenres={handleSelectGenres} />
           </div>
 
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <PopularityWidget value={popularity} onChange={setPopularity} />
+            <PopularityWidget value={popularity} onChange={handlePopularity} />
           </div>
 
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
-            <TrackWidget accessToken={accessToken} />
+            <TrackWidget
+              accessToken={accessToken}
+              selectedTracks={tracks}
+              onSelectTracks={handleSelectTracks}
+            />
           </div>
 
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 lg:col-span-3">
@@ -90,6 +124,7 @@ export default function Dashboard() {
             artists={artists}
             genres={genres}
             decades={decades}
+            selectedTracks={tracks}
             minPopularity={popularity.min}
             maxPopularity={popularity.max}
           />
