@@ -37,15 +37,6 @@ function Slider({ label, value, onChange }) {
     </div>
   );
 }
-
-/**
- * MoodWidget (adaptado)
- * - NO llama a Spotify (evita 404 /recommendations)
- * - Emite un objeto normalizado a 0..1 para que DisplaySongs lo use como filtros
- *
- * Props:
- *  - onChangeMood?: (moodProfile) => void
- */
 export default function MoodWidget({ onChangeMood }) {
   const [energy, setEnergy] = useState(50);
   const [relax, setRelax] = useState(50);
@@ -53,18 +44,16 @@ export default function MoodWidget({ onChangeMood }) {
   const [melody, setMelody] = useState(50);
   const [mood, setMood] = useState('Happy');
 
-  // ✅ Perfil que entiende Spotify (0..1)
+  //Perfil que entiende Spotify (0..1)
   const moodProfile = useMemo(() => {
     // relax -> acousticness (más relax => más acústico/suave)
     // melody -> valence (más “melódico/positivo” => más valence)
     return {
       mood,
-      // 0..1
       target_energy: to01(energy),
       target_danceability: to01(danceability),
       target_valence: to01(melody),
       target_acousticness: to01(relax),
-      // por si quieres guardar también el UI raw 0..100
       ui: {
         energy: Number(energy),
         relax: Number(relax),
